@@ -60,14 +60,16 @@ void exterminate(int pid);
 
 void main() {
 
-
+    // init list of commands and current directory
     char **cmd = malloc(MAX_PARAMETERS * sizeof(char *));
     char *currentdir = malloc(PATH_MAX * sizeof(char));
 
     node* sessionHistory = NULL;
 
+    // get history of entered commands from previous shell sessions
     sessionHistory = fileHistory(sessionHistory);
 
+    // set cwd
     initShell(&currentdir);
 
     while(1){
