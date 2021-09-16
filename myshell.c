@@ -84,14 +84,14 @@ void main() {
     }
 
 }
-
+// sets each pointer in cmd to null
 void initCmd(char** cmd){
     for(int i = 0; i < MAX_PARAMETERS; i++){
         cmd[i] = NULL;
     }
 }
 
-// adds user entered command to history list
+// adds command from history file to END of the list
 node* fileAddHistory(char* c, node* sessionHistory){
     node* tmp = sessionHistory;
 
@@ -141,12 +141,7 @@ void initShell(char **cd) {
     getcwd(*cd, PATH_MAX);
 }
 
-// sets each pointer in cmd to null
-void initCmd(char** cmd){
-    for(int i = 0; i < MAX_PARAMETERS; i++){
-        cmd[i] = NULL;
-    }
-}
+
 
 //get the user enter command
 node* getCmd(char **cmd, node* sessionHistory) {
@@ -170,6 +165,7 @@ node* getCmd(char **cmd, node* sessionHistory) {
 
 }
 
+// adds command to the FRONT of history list
 node* addHistory(char *buf, node *sessionHistory) {
 
 
@@ -185,14 +181,19 @@ node* addHistory(char *buf, node *sessionHistory) {
 
 }
 
+//TODO split if ladder into separate functions
+//this is where the magic happens. The entered command is passed in, we find what command was entered
+//and perform the command
 node* executeCmd(char* cd, char **cmd, node* sessionHistory) {
 
+    // exits myshell
     if (strcmp(cmd[0], "byebye") == 0){
         printf("BYE!\n");
         saveHistory(sessionHistory);
         exit(0);
     }
 
+    //prints history
     else if (strcmp(cmd[0], "history") ==0){
         if(cmd[1] != NULL && strcmp(cmd[1], "-c") == 0){
             saveHistory(sessionHistory);
@@ -201,14 +202,17 @@ node* executeCmd(char* cd, char **cmd, node* sessionHistory) {
             printHistory(sessionHistory);
     }
 
+    //prints cd
     if (strcmp(cmd[0], "whereami") == 0){
         printf("%s\n", cd);
     }
 
+    // moves cd to user entered dir
     if(strcmp(cmd[0], "movetodir") == 0){
         moveToDir(cmd[1], &cd);
     }
 
+    //replays a command from history
     if(strcmp(cmd[0], "replay") == 0){
 
         int num = atoi(cmd[1]);
@@ -228,7 +232,8 @@ node* executeCmd(char* cd, char **cmd, node* sessionHistory) {
         sessionHistory = executeCmd(cd, cmd, sessionHistory);
         return sessionHistory;
     }
-
+    
+    // starts a process "repeat" number of times in foreground or background
     if(strcmp(cmd[0], "start") == 0 || strcmp(cmd[0], "background") == 0 || strcmp(cmd[0], "repeat") == 0)
     {
         char* buf = malloc((strlen(cmd[1]) + 1) * sizeof(char));
@@ -259,10 +264,12 @@ node* executeCmd(char* cd, char **cmd, node* sessionHistory) {
 
     }
 
+    //kills process 
     if(strcmp(cmd[0], "dalek") == 0){
         exterminate(atoi(cmd[1]));
     }
 
+    //checks to see if dir/file exists
     if(strcmp(cmd[0], "dwelt") == 0){
 
         char slash;
@@ -290,6 +297,7 @@ node* executeCmd(char* cd, char **cmd, node* sessionHistory) {
             printf("Dwelt not\n");
     }
 
+    //creates a file
     if(strcmp(cmd[0], "maik") == 0){
         char slash;
         char* path;
@@ -315,6 +323,7 @@ node* executeCmd(char* cd, char **cmd, node* sessionHistory) {
         close(fd);
     }
 
+    // copy one files contents to another
     if(strcmp(cmd[0], "coppy") == 0){
         
         char* source = malloc((strlen(cmd[1]) + 1) * sizeof(char));
@@ -364,7 +373,7 @@ node* executeCmd(char* cd, char **cmd, node* sessionHistory) {
 
 }
 
-
+//kills a process with given PID
 void exterminate(int pid) {
     if(kill(pid, SIGKILL) == 0)
         printf("exterminated pid: %d\n", pid);
@@ -373,7 +382,7 @@ void exterminate(int pid) {
 }
 
 
-
+//sets absolute path
 char *setPath(char **cmd, char **buf, char *cd, char slash, int index, int flag) {
 
     char* path = malloc(MAX_STRLEN * sizeof(char));
@@ -395,7 +404,8 @@ char *setPath(char **cmd, char **buf, char *cd, char slash, int index, int flag)
 
     return path;
 }
-
+//parse the program args, etc start /usr/bin/xterm -bg green,
+//we want to run xterm with a green backgroun
 char **getArgs(char **cmd, char **str, char slash, int index) {
     int i;
     int j;
@@ -421,7 +431,7 @@ char **getArgs(char **cmd, char **str, char slash, int index) {
 
     return args;
 }
-
+//tokenize a given command so we can analyze each arg
 void parseCmd(char **cmd, char *buf, char* delim, char slash) {
     char *token = NULL;
 
@@ -441,6 +451,7 @@ void parseCmd(char **cmd, char *buf, char* delim, char slash) {
 
 }
 
+//deletes session history but not file history
 node* clearHistory(node* sessionHistory){
 
     if(sessionHistory->next != NULL){
@@ -452,6 +463,7 @@ node* clearHistory(node* sessionHistory){
     
 }
 
+//saves history to file
 void saveHistory(node* sessionHistory){
 
     node* tmp = sessionHistory;
@@ -473,6 +485,7 @@ void saveHistory(node* sessionHistory){
     fclose(fp);
 }
 
+//prints history of entered commands
 void printHistory(node* sessionHistory){
 
     int j = 0;
@@ -527,6 +540,8 @@ char* getCmdToReplay(int num, node* sessionHistory){
     return NULL;
 }
 
+// forks a child and runs program with execv(). Can run in foreground(parent will pause execution until child process is finished) 
+// or runs in background and parent and child run concurrently.
 void start(char *path, char **args, int background) {
 
     pid_t pid = fork();
