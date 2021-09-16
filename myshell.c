@@ -76,6 +76,7 @@ void main() {
         
         printf("%s #", currentdir);
         initCmd(cmd);
+        // get next command and add to history
         sessionHistory = getCmd(cmd, sessionHistory);
 
         sessionHistory = executeCmd(currentdir, cmd, sessionHistory);
@@ -84,6 +85,13 @@ void main() {
 
 }
 
+void initCmd(char** cmd){
+    for(int i = 0; i < MAX_PARAMETERS; i++){
+        cmd[i] = NULL;
+    }
+}
+
+// adds user entered command to history list
 node* fileAddHistory(char* c, node* sessionHistory){
     node* tmp = sessionHistory;
 
@@ -107,6 +115,7 @@ node* fileAddHistory(char* c, node* sessionHistory){
 
 }
 
+//on startup will open txt file of previous commands and add them to history list
 node* fileHistory(node* sessionHistory){
     char* c = malloc(MAX_STRLEN * sizeof(char));
 
@@ -126,17 +135,20 @@ node* fileHistory(node* sessionHistory){
     return sessionHistory;
 }
 
+// gets cwd
 void initShell(char **cd) {
 
     getcwd(*cd, PATH_MAX);
 }
 
+// sets each pointer in cmd to null
 void initCmd(char** cmd){
     for(int i = 0; i < MAX_PARAMETERS; i++){
         cmd[i] = NULL;
     }
 }
 
+//get the user enter command
 node* getCmd(char **cmd, node* sessionHistory) {
 
     char buf[MAX_STRLEN];
@@ -148,6 +160,8 @@ node* getCmd(char **cmd, node* sessionHistory) {
     strcpy(histCmd, buf);
     // buf will just be first part of string
     parseCmd(cmd, buf, " ", 0);
+    
+    //dont add replay to session history
     if(strcmp(buf, "replay") != 0)
         sessionHistory = addHistory(histCmd, sessionHistory);
 
